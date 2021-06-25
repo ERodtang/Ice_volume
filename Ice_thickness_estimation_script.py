@@ -1,10 +1,21 @@
 import processing
 from processing.core.Processing import Processing
 
-DEM_folder_path = 'B:/QGIS_Drone_ice_vol/DEM/'
-CLIPPED_DEM_folder_path = 'B:/QGIS_Drone_ice_vol/CLIPPED_DEM/'
-DIFFERENCE_DEM_folder_path = 'B:/QGIS_Drone_ice_vol/DIFFERENCE_DEM/'
-river_polygon = QgsVectorLayer("B:/QGIS_Drone_ice_vol/river_bank.shp")
+Root_folder_path = 'B:/QGIS_Drone_ice_vol/'                 # You need to specify the root folder of your project
+No_ice_raster_name = '2020_12_16_Soknedals_tunnel_DEM.tif'  # Specify which DEM (in the DEM folder) that corresponds to the no ice condition (As low discharge as possible)
+river_polygon_name = 'river_bank.shp'                       # Specify the name of a shape file that contains a polygon that covers the river, must be in project root directory
+DEM_folder_path = Root_folder_path + 'DEM/'                 # The root folder of your project must contain a folder called DEM containing your digital elevation models
+CLIPPED_DEM_folder_path = Root_folder_path + 'CLIPPED_DEM/'
+if os.path.isdir(CLIPPED_DEM_folder_path) == False: 
+    os.mkdir(CLIPPED_DEM_folder_path)
+
+DIFFERENCE_DEM_folder_path = Root_folder_path + 'DIFFERENCE_DEM/'
+if os.path.isdir(DIFFERENCE_DEM_folder_path) == False:
+    os.mkdir(DIFFERENCE_DEM_folder_path)
+
+No_ice_raster_path = DEM_folder_path + No_ice_raster_name
+No_ice_raster_path = No_ice_raster_path.removesuffix('DEM')+'CLIPPED_DEM.tif'
+river_polygon = QgsVectorLayer(Root_folder_path + river_polygon_name)
 root = QgsProject.instance().layerTreeRoot()#Make a layer tree
 
 #Clip rasters to river extent
@@ -25,7 +36,7 @@ for layer in root.children():
         processing.runAndLoadResults('gdal:cliprasterbymasklayer', parameters)
 
 #Subtract rasters from no ice raster
-no_ice_layer = QgsRasterLayer('B:/QGIS_Drone_ice_vol/CLIPPED_DEM/2020_12_16_Soknedals_tunnel_CLIPPED_DEM.tif')
+no_ice_layer = QgsRasterLayer(No_ice_raster_path)
 no_ice_ras = QgsRasterCalculatorEntry()
 no_ice_ras.ref = 'no_ice_ras@1'
 no_ice_ras.raster = no_ice_layer

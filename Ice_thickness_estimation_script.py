@@ -82,7 +82,7 @@ for layer in CLIPPED_DEM_group.findLayers():
     ras[(str(layer.name())+'_ras')].raster = lyr1
     ras[(str(layer.name())+'_ras')].bandNumber = 1
     entries.append(ras[(str(layer.name())+'_ras')])
-    computation_str = str('no_ice_ras@1 - '+ras[(str(layer.name())+'_ras')].ref)
+    computation_str = str(ras[(str(layer.name())+'_ras')].ref + ' - no_ice_ras@1')
     calc = QgsRasterCalculator(computation_str, output, 'GTiff', lyr1.extent(), lyr1.width() ,lyr1.height(),entries)
     calc.processCalculation()
     DIFFERENCE_layer_name = layer.name()
@@ -109,4 +109,3 @@ for layer in DIFFERENCE_DEM_group.findLayers():
         STATS_layer = QgsVectorLayer(processing_results['OUTPUT'], STATS_layer_name)
         QgsProject.instance().addMapLayer(STATS_layer, False)
         STATS_group.addLayer(STATS_layer)
-

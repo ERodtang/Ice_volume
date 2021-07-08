@@ -48,6 +48,8 @@ STATS_group = QgsLayerTreeGroup.findGroup(root,'STATS')
 No_ice_CLIPPED_raster_path = CLIPPED_DEM_folder_path + No_ice_raster_name
 No_ice_CLIPPED_raster_path = No_ice_CLIPPED_raster_path.removesuffix('DEM.tif')+'CLIPPED_DEM.tif'
 
+#Add all DEM files to Qgis canvas
+
 #Clip rasters to river extent
 for layer in DEM_group.findLayers():
     ras = QgsRasterLayer(str(DEM_folder_path)+str(layer.name())+'.tif')

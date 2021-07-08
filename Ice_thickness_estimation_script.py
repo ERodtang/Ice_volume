@@ -4,7 +4,7 @@ from processing.core.Processing import Processing
 #These paths and files must be specified correctly by the user:
 #############################################################
 Root_folder_path = 'B:/QGIS_Drone_ice_vol/'                 # You need to specify the root folder of your project
-No_ice_raster_name = '2020_12_16_Soknedals_tunnel_DEM.tif'  # Specify which DEM (in the DEM folder) that corresponds to the no ice condition (As low discharge as possible)
+No_ice_raster_name = '2020_10_06_Soknedals_tunnel_DEM.tif'  # Specify which DEM (in the DEM folder) that corresponds to the no ice condition (As low discharge as possible)
 river_polygon_name = 'river_bank.shp'                       # Specify the name of a shape file that contains a polygon that covers the river, must be in project root directory
 #############################################################
 root = QgsProject.instance().layerTreeRoot()
@@ -76,7 +76,11 @@ for layer in DEM_group.findLayers():
     'OPTIONS': None,
     'DATA_TYPE': 0,
     'OUTPUT': output_string}
-    processing.runAndLoadResults('gdal:cliprasterbymasklayer', parameters)
+    processing_results = processing.run('gdal:cliprasterbymasklayer', parameters)
+    CLIPPEd_layer_name = str(layer.name()).removesuffix('DEM')+'CLIPPED_DEM'
+    CLIPPED_layer = QgsVectorLayer(processing_results['OUTPUT'], CLIPPED_layer_name)
+    QgsProject.instance().addMapLayer(CLIPPED_layer, False)
+    CLIPPED_DEM_group.addLayer(CLIPPED_layer)
 
 #Subtract rasters from no ice raster
 no_ice_layer = QgsRasterLayer(No_ice_CLIPPED_raster_path)

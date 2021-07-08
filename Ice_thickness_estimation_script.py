@@ -50,7 +50,6 @@ No_ice_CLIPPED_raster_path = No_ice_CLIPPED_raster_path.removesuffix('DEM.tif')+
 
 #Add all DEM files to Qgis canvas
 for root, dirs, files in os.walk(DEM_folder_path):
-    print(root)
     for name in files:
         DEM_full_path = root + name
         DEM_layer_name = name

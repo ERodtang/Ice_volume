@@ -60,7 +60,7 @@ for root, dirs, files in os.walk(DEM_folder_path):
             QgsProject.instance().addMapLayer(DEM_layer, False)
             DEM_group.addLayer(DEM_layer)
         else:
-            print("Tried to add layer " + DEM_layer_name + ", however layer allready in canvas. Hence layer not added")
+            print("Tried to add layer " + DEM_layer_name + ", however layer already in canvas. Hence layer not added")
 
 #Clip rasters to river extent
 for layer in DEM_group.findLayers():

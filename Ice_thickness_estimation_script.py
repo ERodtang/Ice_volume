@@ -49,6 +49,15 @@ No_ice_CLIPPED_raster_path = CLIPPED_DEM_folder_path + No_ice_raster_name
 No_ice_CLIPPED_raster_path = No_ice_CLIPPED_raster_path.removesuffix('DEM.tif')+'CLIPPED_DEM.tif'
 
 #Add all DEM files to Qgis canvas
+for root, dirs, files in os.walk(DEM_folder_path):
+    print(root)
+    for name in files:
+        DEM_full_path = root + name
+        DEM_layer_name = name
+        DEM_layer_name = DEM_layer_name.removesuffix('.tif')
+        DEM_layer = QgsRasterLayer(DEM_full_path,DEM_layer_name)
+        QgsProject.instance().addMapLayer(DEM_layer, False)
+        DEM_group.addLayer(DEM_layer)
 
 #Clip rasters to river extent
 for layer in DEM_group.findLayers():

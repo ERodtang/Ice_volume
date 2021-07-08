@@ -55,7 +55,7 @@ for root, dirs, files in os.walk(DEM_folder_path):
         DEM_layer_name = name
         DEM_layer_name = DEM_layer_name.removesuffix('.tif')
         DEM_layer = QgsRasterLayer(DEM_full_path,DEM_layer_name)
-        #Only add to canvas if layer doesnt already exist
+        #Only add to canvas if layer doesn't already exist
         if len(QgsProject.instance().mapLayersByName(DEM_layer_name)) == 0:
             QgsProject.instance().addMapLayer(DEM_layer, False)
             DEM_group.addLayer(DEM_layer)
@@ -77,10 +77,15 @@ for layer in DEM_group.findLayers():
     'DATA_TYPE': 0,
     'OUTPUT': output_string}
     processing_results = processing.run('gdal:cliprasterbymasklayer', parameters)
-    CLIPPEd_layer_name = str(layer.name()).removesuffix('DEM')+'CLIPPED_DEM'
-    CLIPPED_layer = QgsVectorLayer(processing_results['OUTPUT'], CLIPPED_layer_name)
-    QgsProject.instance().addMapLayer(CLIPPED_layer, False)
-    CLIPPED_DEM_group.addLayer(CLIPPED_layer)
+    CLIPPED_layer_name = str(layer.name()).removesuffix('DEM')+'CLIPPED_DEM'
+    CLIPPED_layer = QgsVectorLayer(output_string, CLIPPED_layer_name)
+    #Only add to canvas if layer doesn't already exist
+    if len(QgsProject.instance().mapLayersByName(CLIPPED_layer_name)) == 0:
+        QgsProject.instance().addMapLayer(CLIPPED_layer, False)
+        CLIPPED_DEM_group.addLayer(CLIPPED_layer)
+    else:
+        print("Tried to add layer " + CLIPPED_layer_name + ", however layer already in canvas. Hence layer not added")
+
 
 #Subtract rasters from no ice raster
 no_ice_layer = QgsRasterLayer(No_ice_CLIPPED_raster_path)
@@ -106,8 +111,13 @@ for layer in CLIPPED_DEM_group.findLayers():
     DIFFERENCE_layer_name = layer.name()
     DIFFERENCE_layer_name = DIFFERENCE_layer_name.removesuffix('CLIPPED_DEM')+'DIFFERENCE_DEM'
     DIFFERENCE_layer = QgsRasterLayer(output,DIFFERENCE_layer_name)
-    QgsProject.instance().addMapLayer(DIFFERENCE_layer, False)
-    DIFFERENCE_DEM_group.addLayer(DIFFERENCE_layer)
+    #Only add to canvas if layer doesn't already exist
+    if len(QgsProject.instance().mapLayersByName(DIFFERENCE_layer_name)) == 0:
+        QgsProject.instance().addMapLayer(DIFFERENCE_layer, False)
+        DIFFERENCE_DEM_group.addLayer(DIFFERENCE_layer)
+    else:
+        print("Tried to add layer " + DIFFERENCE_layer_name + ", however layer already in canvas. Hence layer not added")
+
 
 #Calculate raster statistics
 for layer in DIFFERENCE_DEM_group.findLayers():
@@ -125,5 +135,9 @@ for layer in DIFFERENCE_DEM_group.findLayers():
         processing_results = processing.run("native:zonalstatisticsfb", parameters)
         STATS_layer_name = str(layer.name()).removesuffix('DIFFERENCE_DEM')+'STATS'
         STATS_layer = QgsVectorLayer(processing_results['OUTPUT'], STATS_layer_name)
-        QgsProject.instance().addMapLayer(STATS_layer, False)
-        STATS_group.addLayer(STATS_layer)
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(STATS_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(STATS_layer, False)
+            STATS_group.addLayer(STATS_layer)
+        else:
+            print("Tried to add layer " + STATS_layer_name + ", however layer already in canvas. Hence layer not added")

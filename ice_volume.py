@@ -23,7 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QFileDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -178,7 +178,10 @@ class IceVolume:
                 self.tr(u'&Ice Volume'),
                 action)
             self.iface.removeToolBarIcon(action)
-
+    
+    def select_output_file(self):
+        foldername = QFileDialog.getExistingDirectory(self.dlg, "Choose DEM Folder")
+        self.dlg.DEMFolderLineEdit.setText(foldername)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -188,6 +191,7 @@ class IceVolume:
         if self.first_start == True:
             self.first_start = False
             self.dlg = IceVolumeDialog()
+            self.dlg.DEMFolderPushButton.clicked.connect(self.select_output_file)
 
         # show the dialog
         self.dlg.show()

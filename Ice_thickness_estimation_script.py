@@ -82,7 +82,7 @@ for layer in DEM_group.findLayers():
     'OUTPUT': output_string}
     processing_results = processing.run('gdal:cliprasterbymasklayer', parameters)
     CLIPPED_layer_name = str(layer.name()).removesuffix('DEM')+'CLIPPED_DEM'
-    CLIPPED_layer = QgsVectorLayer(output_string, CLIPPED_layer_name)
+    CLIPPED_layer = QgsRasterLayer(output_string, CLIPPED_layer_name)
     #Only add to canvas if layer doesn't already exist
     if len(QgsProject.instance().mapLayersByName(CLIPPED_layer_name)) == 0:
         QgsProject.instance().addMapLayer(CLIPPED_layer, False)

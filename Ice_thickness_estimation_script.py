@@ -1,5 +1,9 @@
 import processing
 from processing.core.Processing import Processing
+import os
+from os import *
+import qgis
+from  qgis.core import *
 
 #These paths and files must be specified correctly by the user:
 #############################################################

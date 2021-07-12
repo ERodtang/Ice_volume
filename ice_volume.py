@@ -30,6 +30,8 @@ from .resources import *
 # Import the code for the dialog
 from .ice_volume_dialog import IceVolumeDialog
 import os.path
+import os
+import sys
 
 
 class IceVolume:
@@ -213,4 +215,7 @@ class IceVolume:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+            here = os.path.dirname(os.path.abspath(__file__))
+            sys.path.append(here)
+            import Ice_thickness_estimation_script
             pass

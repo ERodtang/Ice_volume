@@ -179,10 +179,20 @@ class IceVolume:
                 action)
             self.iface.removeToolBarIcon(action)
     
-    def select_output_file(self):
+    def select_DEM_folder(self):
         foldername = QFileDialog.getExistingDirectory(self.dlg, "Choose DEM Folder")
         self.dlg.DEMFolderLineEdit.setText(foldername)
-
+    
+    def select_river_polygon(self):
+        filename, _filter = QFileDialog.getOpenFileName(
+        self.dlg, "Select river polygon","", '*.shp')
+        self.dlg.riverPolygonLineEdit.setText(filename)
+    
+    def select_river_bed_DEM(self):
+        filename, _filter = QFileDialog.getOpenFileName(
+        self.dlg, "Select river bed DEM","", '*.tif')
+        self.dlg.riverBedDEMLineEdit.setText(filename)
+    
     def run(self):
         """Run method that performs all the real work"""
 
@@ -191,7 +201,9 @@ class IceVolume:
         if self.first_start == True:
             self.first_start = False
             self.dlg = IceVolumeDialog()
-            self.dlg.DEMFolderPushButton.clicked.connect(self.select_output_file)
+            self.dlg.DEMFolderPushButton.clicked.connect(self.select_DEM_folder)
+            self.dlg.riverPolygonPushButton.clicked.connect(self.select_river_polygon)
+            self.dlg.riverBedDEMPushButton.clicked.connect(self.select_river_bed_DEM)
 
         # show the dialog
         self.dlg.show()

@@ -6,30 +6,43 @@ import qgis
 from  qgis.core import *
 from qgis.analysis import QgsRasterCalculator, QgsRasterCalculatorEntry
 
-def ice_thickness_estimator():
-    #These paths and files must be specified correctly by the user:
-    #############################################################
-    Root_folder_path = 'B:/QGIS_Drone_ice_vol/'                 # You need to specify the root folder of your project
-    No_ice_raster_name = '2020_10_06_Soknedals_tunnel_DEM.tif'  # Specify which DEM (in the DEM folder) that corresponds to the no ice condition (As low discharge as possible)
-    river_polygon_name = 'river_bank.shp'                       # Specify the name of a shape file that contains a polygon that covers the river, must be in project root directory
-    #############################################################
+def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_path):
+    '''
+    Processes DEM rasters. Clipping them to the extent of river_polygon_path. 
+    Then subtracting each of them from No_ice_raster_path. 
+    Then computes statistics for the resultant difference rasters.
+
+    Parameters
+    ----------
+    Root_folder_path : TYPE
+        You need to specify the root folder of your project.
+    No_ice_raster_path : TYPE
+        Specify which DEM (in the DEM folder) that corresponds to the no ice condition (As low discharge as possible).
+    river_polygon_path : TYPE
+        Specify the name of a shape file that contains a polygon that covers the river, must be in project root directory.
+    Returns
+    -------
+    NULL : TYPE
+        DESCRIPTION.
+
+    '''
     root = QgsProject.instance().layerTreeRoot()
     
-    DEM_folder_path = Root_folder_path + 'DEM/'                 # The root folder of your project must contain a folder called DEM containing your digital elevation models
-    river_polygon = QgsVectorLayer(Root_folder_path + river_polygon_name, 'river_polygon')
+    DEM_folder_path = Root_folder_path + '/DEM/'                 # The root folder of your project must contain a folder called DEM containing your digital elevation models
+    river_polygon = QgsVectorLayer(river_polygon_path, 'river_polygon')
     root.addLayer(river_polygon)
-    No_ice_raster_path = DEM_folder_path + No_ice_raster_name
+    No_ice_raster_name = os.path.basename(No_ice_raster_path)
     
     #Initialise folder structure
-    CLIPPED_DEM_folder_path = Root_folder_path + 'CLIPPED_DEM/'
+    CLIPPED_DEM_folder_path = Root_folder_path + '/CLIPPED_DEM/'
     if os.path.isdir(CLIPPED_DEM_folder_path) == False: 
         os.mkdir(CLIPPED_DEM_folder_path)
     
-    DIFFERENCE_DEM_folder_path = Root_folder_path + 'DIFFERENCE_DEM/'
+    DIFFERENCE_DEM_folder_path = Root_folder_path + '/DIFFERENCE_DEM/'
     if os.path.isdir(DIFFERENCE_DEM_folder_path) == False:
         os.mkdir(DIFFERENCE_DEM_folder_path)
     
-    STATS_folder_path = Root_folder_path + 'STATS/'
+    STATS_folder_path = Root_folder_path + '/STATS/'
     if os.path.isdir(STATS_folder_path) == False:
         os.mkdir(STATS_folder_path)
     

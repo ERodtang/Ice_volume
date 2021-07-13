@@ -215,10 +215,10 @@ class IceVolume:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
+            Root_folder_path = self.dlg.DEMFolderLineEdit.text()
+            No_ice_raster_path = self.dlg.riverBedDEMLineEdit.text()
+            river_polygon_path = self.dlg.riverPolygonLineEdit.text()
             here = os.path.dirname(os.path.abspath(__file__))
             sys.path.append(here)
             import Ice_thickness_estimation_script
-            Ice_thickness_estimation_script.ice_thickness_estimator()
-            pass
+            Ice_thickness_estimation_script.ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_path)

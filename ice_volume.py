@@ -32,6 +32,8 @@ from .ice_volume_dialog import IceVolumeDialog
 import os.path
 import os
 import sys
+from qgis.analysis import QgsRasterCalculator, QgsRasterCalculatorEntry
+
 
 
 class IceVolume:
@@ -218,4 +220,5 @@ class IceVolume:
             here = os.path.dirname(os.path.abspath(__file__))
             sys.path.append(here)
             import Ice_thickness_estimation_script
+            Ice_thickness_estimation_script.ice_thickness_estimator()
             pass

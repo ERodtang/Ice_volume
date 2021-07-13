@@ -57,16 +57,17 @@ def ice_thickness_estimator():
     #Add all DEM files to Qgis canvas
     for root, dirs, files in os.walk(DEM_folder_path):
         for name in files:
-            DEM_full_path = root + name
-            DEM_layer_name = name
-            DEM_layer_name = DEM_layer_name.removesuffix('.tif')
-            DEM_layer = QgsRasterLayer(DEM_full_path,DEM_layer_name)
-            #Only add to canvas if layer doesn't already exist
-            if len(QgsProject.instance().mapLayersByName(DEM_layer_name)) == 0:
-                QgsProject.instance().addMapLayer(DEM_layer, False)
-                DEM_group.addLayer(DEM_layer)
-            else:
-                print("Tried to add layer " + DEM_layer_name + ", however layer already in canvas. Hence layer not added")
+            if name.endswith('.tif') == True:
+                DEM_full_path = root + name
+                DEM_layer_name = name
+                DEM_layer_name = DEM_layer_name.removesuffix('.tif')
+                DEM_layer = QgsRasterLayer(DEM_full_path,DEM_layer_name)
+                #Only add to canvas if layer doesn't already exist
+                if len(QgsProject.instance().mapLayersByName(DEM_layer_name)) == 0:
+                    QgsProject.instance().addMapLayer(DEM_layer, False)
+                    DEM_group.addLayer(DEM_layer)
+                else:
+                    print("Tried to add layer " + DEM_layer_name + ", however layer already in canvas. Hence layer not added")
     
     #Clip rasters to river extent
     for layer in DEM_group.findLayers():

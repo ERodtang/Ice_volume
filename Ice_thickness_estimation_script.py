@@ -132,19 +132,18 @@ def ice_thickness_estimator():
         current_OUTPUT = STATS_folder_path + layer.name()
         current_OUTPUT = current_OUTPUT.removesuffix('DIFFERENCE_DEM')+"STATS.shp"
         column_prefix = '_'
-        if(os.path.isfile(current_OUTPUT) == False):
-            parameters = {'COLUMN_PREFIX' : column_prefix, 
-            'INPUT' : river_polygon, 
-            'INPUT_RASTER' : current_DEM, 
-            'OUTPUT' : current_OUTPUT, 
-            'RASTER_BAND' : 1,
-            'STATISTICS' : [1,2,3,4,5,6]}
-            processing_results = processing.run("native:zonalstatisticsfb", parameters)
-            STATS_layer_name = str(layer.name()).removesuffix('DIFFERENCE_DEM')+'STATS'
-            STATS_layer = QgsVectorLayer(processing_results['OUTPUT'], STATS_layer_name)
-            #Only add to canvas if layer doesn't already exist
-            if len(QgsProject.instance().mapLayersByName(STATS_layer_name)) == 0:
-                QgsProject.instance().addMapLayer(STATS_layer, False)
-                STATS_group.addLayer(STATS_layer)
-            else:
-                print("Tried to add layer " + STATS_layer_name + ", however layer already in canvas. Hence layer not added")
+        parameters = {'COLUMN_PREFIX' : column_prefix, 
+        'INPUT' : river_polygon, 
+        'INPUT_RASTER' : current_DEM, 
+        'OUTPUT' : current_OUTPUT, 
+        'RASTER_BAND' : 1,
+        'STATISTICS' : [1,2,3,4,5,6]}
+        processing_results = processing.run("native:zonalstatisticsfb", parameters)
+        STATS_layer_name = str(layer.name()).removesuffix('DIFFERENCE_DEM')+'STATS'
+        STATS_layer = QgsVectorLayer(processing_results['OUTPUT'], STATS_layer_name)
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(STATS_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(STATS_layer, False)
+            STATS_group.addLayer(STATS_layer)
+        else:
+            print("Tried to add layer " + STATS_layer_name + ", however layer already in canvas. Hence layer not added")

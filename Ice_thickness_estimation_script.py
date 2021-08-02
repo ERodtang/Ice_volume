@@ -38,6 +38,18 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     if os.path.isdir(CLIPPED_DEM_folder_path) == False: 
         os.mkdir(CLIPPED_DEM_folder_path)
     
+    FILLED_DEM_folder_path = Root_folder_path + '/FILLED_DEM/'
+    if os.path.isdir(FILLED_DEM_folder_path) == False: 
+        os.mkdir(FILLED_DEM_folder_path)
+    
+    FDIR_folder_path = Root_folder_path + '/FDIR/'
+    if os.path.isdir(FDIR_folder_path) == False: 
+        os.mkdir(FDIR_folder_path)
+    
+    WSHED_folder_path = Root_folder_path + '/WSHED/'
+    if os.path.isdir(WSHED_folder_path) == False: 
+        os.mkdir(WSHED_folder_path)
+    
     DIFFERENCE_DEM_folder_path = Root_folder_path + '/DIFFERENCE_DEM/'
     if os.path.isdir(DIFFERENCE_DEM_folder_path) == False:
         os.mkdir(DIFFERENCE_DEM_folder_path)
@@ -53,6 +65,15 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     if QgsLayerTreeGroup.findGroup(root,'CLIPPED_DEM') == NULL:
         QgsLayerTreeGroup.addGroup(root,'CLIPPED_DEM')
     
+    if QgsLayerTreeGroup.findGroup(root,'FILLED_DEM') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'FILLED_DEM')
+    
+    if QgsLayerTreeGroup.findGroup(root,'FDIR') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'FDIR')
+    
+    if QgsLayerTreeGroup.findGroup(root,'WSHED') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'WSHED')
+    
     if QgsLayerTreeGroup.findGroup(root,'DIFFERENCE_DEM') == NULL:
         QgsLayerTreeGroup.addGroup(root,'DIFFERENCE_DEM')
     
@@ -62,10 +83,13 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     DEM_group = QgsLayerTreeGroup.findGroup(root,'DEM')
     DIFFERENCE_DEM_group = QgsLayerTreeGroup.findGroup(root,'DIFFERENCE_DEM')
     CLIPPED_DEM_group = QgsLayerTreeGroup.findGroup(root,'CLIPPED_DEM')
+    FILLED_DEM_group = QgsLayerTreeGroup.findGroup(root,'FILLED_DEM')
     STATS_group = QgsLayerTreeGroup.findGroup(root,'STATS')
+    FDIR_group = QgsLayerTreeGroup.findGroup(root,'FDIR')
+    WSHED_group = QgsLayerTreeGroup.findGroup(root,'WSHED')
     
-    No_ice_CLIPPED_raster_path = CLIPPED_DEM_folder_path + No_ice_raster_name
-    No_ice_CLIPPED_raster_path = No_ice_CLIPPED_raster_path.removesuffix('DEM.tif')+'CLIPPED_DEM.tif'
+    No_ice_FILLED_raster_path = FILLED_DEM_folder_path + No_ice_raster_name
+    No_ice_FILLED_raster_path = No_ice_FILLED_raster_path.removesuffix('DEM.tif')+'FILLED_DEM.tif'
     
     #Add all DEM files to Qgis canvas
     for root, dirs, files in os.walk(DEM_folder_path):
@@ -105,21 +129,63 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
             CLIPPED_DEM_group.addLayer(CLIPPED_layer)
         else:
             print("Tried to add layer " + CLIPPED_layer_name + ", however layer already in canvas. Hence layer not added")
-    
-    
+            
+    #Fill sinks - using SAGA wang and liu       
+    for layer in CLIPPED_DEM_group.findLayers():
+        input_raster = QgsRasterLayer(str(CLIPPED_DEM_folder_path) + str(layer.name())+'.tif')
+        filled_string = str(FILLED_DEM_folder_path) + str(layer.name())
+        filled_string = filled_string.removesuffix('CLIPPED_DEM')+'FILLED_DEM.tif'
+        
+        fdir_string = str(FDIR_folder_path) + str(layer.name())
+        fdir_string = fdir_string.removesuffix('CLIPPED_DEM')+'FDIR.tif'
+        
+        wshed_string = str(WSHED_folder_path) + str(layer.name())
+        wshed_string = wshed_string.removesuffix('CLIPPED_DEM')+'WSHED.tif'
+
+        parameters = {'ELEV': input_raster,
+        'FILLED': filled_string,
+        'FDIR': fdir_string,
+        'WSHED': wshed_string,
+        'MINSLOPE': 0.1,}
+        processing_results = processing.run("saga:fillsinkswangliu", parameters)
+        FILLED_layer_name = str(layer.name()).removesuffix('CLIPPED_DEM')+'FILLED_DEM'
+        FILLED_layer = QgsRasterLayer(filled_string, FILLED_layer_name)
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(FILLED_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(FILLED_layer, False)
+            FILLED_DEM_group.addLayer(FILLED_layer)
+        else:
+            print("Tried to add layer " + FILLED_layer_name + ", however layer already in canvas. Hence layer not added")
+
+        FDIR_layer_name = str(layer.name()).removesuffix('CLIPPED_DEM')+'FDIR'
+        FDIR_layer = QgsRasterLayer(filled_string, FDIR_layer_name)
+        if len(QgsProject.instance().mapLayersByName(FDIR_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(FDIR_layer, False)
+            FDIR_group.addLayer(FDIR_layer)
+        else:
+            print("Tried to add layer " + FDIR_layer_name + ", however layer already in canvas. Hence layer not added") 
+       
+        WSHED_layer_name = str(layer.name()).removesuffix('CLIPPED_DEM')+'WSHED'
+        WSHED_layer = QgsRasterLayer(filled_string, WSHED_layer_name)        
+        if len(QgsProject.instance().mapLayersByName(WSHED_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(WSHED_layer, False)
+            WSHED_group.addLayer(WSHED_layer)
+        else:
+            print("Tried to add layer " + WSHED_layer_name + ", however layer already in canvas. Hence layer not added")
+
     #Subtract rasters from no ice raster
-    no_ice_layer = QgsRasterLayer(No_ice_CLIPPED_raster_path)
+    no_ice_layer = QgsRasterLayer(No_ice_FILLED_raster_path)
     no_ice_ras = qgis.analysis.QgsRasterCalculatorEntry()
     no_ice_ras.ref = 'no_ice_ras@1'
     no_ice_ras.raster = no_ice_layer
     no_ice_ras.bandNumber = 1
     ras={} #Initialize raster dictionary
-    for layer in CLIPPED_DEM_group.findLayers():
+    for layer in FILLED_DEM_group.findLayers():
         entries = []
         entries.append(no_ice_ras)
-        lyr1 = QgsRasterLayer(str(CLIPPED_DEM_folder_path)+str(layer.name())+'.tif')
+        lyr1 = QgsRasterLayer(str(FILLED_DEM_folder_path)+str(layer.name())+'.tif')
         output = str(DIFFERENCE_DEM_folder_path)+str(layer.name())
-        output = output.removesuffix('CLIPPED_DEM')+'DIFFERENCE_DEM.tif'
+        output = output.removesuffix('FILLED_DEM')+'DIFFERENCE_DEM.tif'
         ras[(str(layer.name())+'_ras')] = qgis.analysis.QgsRasterCalculatorEntry()
         ras[(str(layer.name())+'_ras')].ref = str(layer.name())+'@1'
         ras[(str(layer.name())+'_ras')].raster = lyr1
@@ -129,7 +195,7 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
         calc = qgis.analysis.QgsRasterCalculator(computation_str, output, 'GTiff', lyr1.extent(), lyr1.width() ,lyr1.height(),entries)
         calc.processCalculation()
         DIFFERENCE_layer_name = layer.name()
-        DIFFERENCE_layer_name = DIFFERENCE_layer_name.removesuffix('CLIPPED_DEM')+'DIFFERENCE_DEM'
+        DIFFERENCE_layer_name = DIFFERENCE_layer_name.removesuffix('FILLED_DEM')+'DIFFERENCE_DEM'
         DIFFERENCE_layer = QgsRasterLayer(output,DIFFERENCE_layer_name)
         #Only add to canvas if layer doesn't already exist
         if len(QgsProject.instance().mapLayersByName(DIFFERENCE_layer_name)) == 0:

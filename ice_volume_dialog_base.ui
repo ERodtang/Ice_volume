@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Ice Volume</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -28,7 +28,7 @@
       <item>
        <widget class="QLabel" name="DEM_folder_label">
         <property name="text">
-         <string>Select DEM folder     </string>
+         <string>Select project folder     </string>
         </property>
        </widget>
       </item>
@@ -99,6 +99,7 @@
    </layout>
   </widget>
  </widget>
+ <resources/>
  <connections>
   <connection>
    <sender>button_box</sender>

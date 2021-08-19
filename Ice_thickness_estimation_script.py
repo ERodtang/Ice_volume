@@ -6,6 +6,7 @@ import qgis
 from  qgis.core import *
 from qgis.analysis import QgsRasterCalculator, QgsRasterCalculatorEntry
 
+
 def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_path):
     '''
     Processes DEM rasters. Clipping them to the extent of river_polygon_path. 
@@ -57,6 +58,26 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     STATS_folder_path = Root_folder_path + '/STATS/'
     if os.path.isdir(STATS_folder_path) == False:
         os.mkdir(STATS_folder_path)
+
+    PRE_FILLED_DEM_folder_path = Root_folder_path + '/PRE_FILLED_DEM/'
+    if os.path.isdir(PRE_FILLED_DEM_folder_path) == False:
+        os.mkdir(PRE_FILLED_DEM_folder_path)
+    
+    FDIR2_folder_path = Root_folder_path + '/FDIR2/'
+    if os.path.isdir(FDIR2_folder_path) == False:
+        os.mkdir(FDIR2_folder_path)
+    
+    WSHED2_folder_path = Root_folder_path + '/WSHED2/'
+    if os.path.isdir(WSHED2_folder_path) == False:
+        os.mkdir(WSHED2_folder_path)
+
+    REVERSED_folder_path = Root_folder_path + '/REVERSED/'
+    if os.path.isdir(REVERSED_folder_path) == False:
+        os.mkdir(REVERSED_folder_path)
+    
+    REV_FILL_folder_path = Root_folder_path + '/REV_FILL/'
+    if os.path.isdir(REV_FILL_folder_path) == False:
+        os.mkdir(REV_FILL_folder_path)
     
     #Initialise QGIS group structure
     if QgsLayerTreeGroup.findGroup(root,'DEM') == NULL:
@@ -68,17 +89,35 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     if QgsLayerTreeGroup.findGroup(root,'FILLED_DEM') == NULL:
         QgsLayerTreeGroup.addGroup(root,'FILLED_DEM')
     
+    if QgsLayerTreeGroup.findGroup(root,'PRE_FILLED_DEM') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'PRE_FILLED_DEM')
+    
     if QgsLayerTreeGroup.findGroup(root,'FDIR') == NULL:
         QgsLayerTreeGroup.addGroup(root,'FDIR')
     
     if QgsLayerTreeGroup.findGroup(root,'WSHED') == NULL:
         QgsLayerTreeGroup.addGroup(root,'WSHED')
+        
+    if QgsLayerTreeGroup.findGroup(root,'FDIR2') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'FDIR2')
+    
+    if QgsLayerTreeGroup.findGroup(root,'WSHED') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'WSHED')
+
+    if QgsLayerTreeGroup.findGroup(root,'WSHED2') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'WSHED2')
     
     if QgsLayerTreeGroup.findGroup(root,'DIFFERENCE_DEM') == NULL:
         QgsLayerTreeGroup.addGroup(root,'DIFFERENCE_DEM')
     
     if QgsLayerTreeGroup.findGroup(root,'STATS') == NULL:
         QgsLayerTreeGroup.addGroup(root,'STATS')
+
+    if QgsLayerTreeGroup.findGroup(root,'REVERSED') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'REVERSED')
+        
+    if QgsLayerTreeGroup.findGroup(root,'REV_FILL') == NULL:
+        QgsLayerTreeGroup.addGroup(root,'REV_FILL')
     
     DEM_group = QgsLayerTreeGroup.findGroup(root,'DEM')
     DIFFERENCE_DEM_group = QgsLayerTreeGroup.findGroup(root,'DIFFERENCE_DEM')
@@ -87,6 +126,11 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     STATS_group = QgsLayerTreeGroup.findGroup(root,'STATS')
     FDIR_group = QgsLayerTreeGroup.findGroup(root,'FDIR')
     WSHED_group = QgsLayerTreeGroup.findGroup(root,'WSHED')
+    FDIR2_group = QgsLayerTreeGroup.findGroup(root,'FDIR2')
+    WSHED2_group = QgsLayerTreeGroup.findGroup(root,'WSHED2')
+    PRE_FILLED_DEM_group = QgsLayerTreeGroup.findGroup(root,'PRE_FILLED_DEM')
+    REVERSED_group = QgsLayerTreeGroup.findGroup(root,'REVERSED')
+    REV_FILL_group = QgsLayerTreeGroup.findGroup(root,'REV_FILL')
     
     No_ice_FILLED_raster_path = FILLED_DEM_folder_path + No_ice_raster_name
     No_ice_FILLED_raster_path = No_ice_FILLED_raster_path.removesuffix('DEM.tif')+'FILLED_DEM.tif'
@@ -133,8 +177,10 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     #Fill sinks - using SAGA wang and liu       
     for layer in CLIPPED_DEM_group.findLayers():
         input_raster = QgsRasterLayer(str(CLIPPED_DEM_folder_path) + str(layer.name())+'.tif')
-        filled_string = str(FILLED_DEM_folder_path) + str(layer.name())
-        filled_string = filled_string.removesuffix('CLIPPED_DEM')+'FILLED_DEM.tif'
+        if input_raster.isValid() == False:
+            raise Exception("input_raster is invalid")
+        filled_string = str(PRE_FILLED_DEM_folder_path) + str(layer.name())
+        filled_string = filled_string.removesuffix('CLIPPED_DEM')+'PRE_FILLED_DEM.tif'
         
         fdir_string = str(FDIR_folder_path) + str(layer.name())
         fdir_string = fdir_string.removesuffix('CLIPPED_DEM')+'FDIR.tif'
@@ -148,12 +194,14 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
         'WSHED': wshed_string,
         'MINSLOPE': 0.1,}
         processing_results = processing.run("saga:fillsinkswangliu", parameters)
-        FILLED_layer_name = str(layer.name()).removesuffix('CLIPPED_DEM')+'FILLED_DEM'
-        FILLED_layer = QgsRasterLayer(filled_string, FILLED_layer_name)
+        FILLED_layer_name = str(layer.name()).removesuffix('CLIPPED_DEM')+'PRE_FILLED_DEM'
+        FILLED_layer = QgsRasterLayer(filled_string, FILLED_layer_name + '.tif')
+        if FILLED_layer.isValid() == False:
+            raise Exception("FILLED_layer is invalid")
         #Only add to canvas if layer doesn't already exist
         if len(QgsProject.instance().mapLayersByName(FILLED_layer_name)) == 0:
             QgsProject.instance().addMapLayer(FILLED_layer, False)
-            FILLED_DEM_group.addLayer(FILLED_layer)
+            PRE_FILLED_DEM_group.addLayer(FILLED_layer)
         else:
             print("Tried to add layer " + FILLED_layer_name + ", however layer already in canvas. Hence layer not added")
 
@@ -172,7 +220,104 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
             WSHED_group.addLayer(WSHED_layer)
         else:
             print("Tried to add layer " + WSHED_layer_name + ", however layer already in canvas. Hence layer not added")
+    
+    #Reverse layers
+    ras={} #Initialize raster dictionary
+    for layer in PRE_FILLED_DEM_group.findLayers():
+        entries = []
+        lyr1 = QgsRasterLayer(str(PRE_FILLED_DEM_folder_path)+str(layer.name()))
+        output = str(REVERSED_folder_path)+str(layer.name())
+        output = output.removesuffix('PRE_FILLED_DEM.tif')+'REVERSED.tif'
+        ras[(str(layer.name())+'_ras')] = qgis.analysis.QgsRasterCalculatorEntry()
+        ras[(str(layer.name())+'_ras')].ref = str(layer.name())+'@1'
+        ras[(str(layer.name())+'_ras')].raster = lyr1
+        ras[(str(layer.name())+'_ras')].bandNumber = 1
+        entries.append(ras[(str(layer.name())+'_ras')])
+        computation_str = str(ras[(str(layer.name())+'_ras')].ref + '*-1')
+        calc = qgis.analysis.QgsRasterCalculator(computation_str, output, 'GTiff', lyr1.extent(), lyr1.width() ,lyr1.height(),entries)
+        calc.processCalculation()
+        REVERSED_layer_name = layer.name()
+        REVERSED_layer_name = REVERSED_layer_name.removesuffix('PRE_FILLED_DEM.tif')+'REVERSED'
+        REVERSED_layer = QgsRasterLayer(output,REVERSED_layer_name)
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(REVERSED_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(REVERSED_layer, False)
+            REVERSED_group.addLayer(REVERSED_layer)
+        else:
+            print("Tried to add layer " + REVERSED_layer_name + ", however layer already in canvas. Hence layer not added")
 
+    #Fill sinks, Wang and Liu for reversed rasters
+    for layer in REVERSED_group.findLayers():
+        input_raster = QgsRasterLayer(str(REVERSED_folder_path) + str(layer.name())+'.tif')
+        rev_fill_string = str(REV_FILL_folder_path) + str(layer.name())
+        rev_fill_string = rev_fill_string.removesuffix('REVERSED')+'REV_FILL.tif'
+        
+        fdir2_string = str(FDIR2_folder_path) + str(layer.name())
+        fdir2_string = fdir2_string.removesuffix('REVERSED')+'FDIR2.tif'
+        
+        wshed2_string = str(WSHED2_folder_path) + str(layer.name())
+        wshed2_string = wshed2_string.removesuffix('REVERSED')+'WSHED2.tif'
+
+        parameters = {'ELEV': input_raster,
+        'FILLED': rev_fill_string,
+        'FDIR': fdir2_string,
+        'WSHED': wshed2_string,
+        'MINSLOPE': 0.1,}
+        processing_results = processing.run("saga:fillsinkswangliu", parameters)
+        REV_FILL_layer_name = str(layer.name()).removesuffix('REVERSED')+'REV_FILL'
+        REV_FILL_layer = QgsRasterLayer(rev_fill_string, REV_FILL_layer_name)
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(REV_FILL_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(REV_FILL_layer, False)
+            REV_FILL_group.addLayer(REV_FILL_layer)
+        else:
+            print("Tried to add layer " + REV_FILL_layer_name + ", however layer already in canvas. Hence layer not added")
+
+        FDIR2_layer_name = str(layer.name()).removesuffix('REVERSED')+'FDIR2'
+        FDIR2_layer = QgsRasterLayer(filled_string, FDIR2_layer_name)
+        if len(QgsProject.instance().mapLayersByName(FDIR2_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(FDIR2_layer, False)
+            FDIR2_group.addLayer(FDIR2_layer)
+        else:
+            print("Tried to add layer " + FDIR2_layer_name + ", however layer already in canvas. Hence layer not added") 
+       
+        WSHED2_layer_name = str(layer.name()).removesuffix('REVERSED')+'WSHED2'
+        WSHED2_layer = QgsRasterLayer(filled_string, WSHED2_layer_name)        
+        if len(QgsProject.instance().mapLayersByName(WSHED2_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(WSHED2_layer, False)
+            WSHED2_group.addLayer(WSHED2_layer)
+        else:
+            print("Tried to add layer " + WSHED2_layer_name + ", however layer already in canvas. Hence layer not added")
+    
+    #Reverse layers
+    ras={} #Initialize raster dictionary
+    for layer in REV_FILL_group.findLayers():
+        entries = []
+        lyr1 = QgsRasterLayer(str(REV_FILL_folder_path)+str(layer.name()) + '.tif')
+        if lyr1.isValid() == False:
+            raise Exception("lyr1 is invalid")
+        output = str(FILLED_DEM_folder_path)+str(layer.name())
+        output = output.removesuffix('REV_FILL')+'FILLED_DEM.tif'
+        ras[(str(layer.name())+'_ras')] = qgis.analysis.QgsRasterCalculatorEntry()
+        ras[(str(layer.name())+'_ras')].ref = str(layer.name())+'@1'
+        ras[(str(layer.name())+'_ras')].raster = lyr1
+        ras[(str(layer.name())+'_ras')].bandNumber = 1
+        entries.append(ras[(str(layer.name())+'_ras')])
+        computation_str = str(ras[(str(layer.name())+'_ras')].ref + '*-1')
+        calc = qgis.analysis.QgsRasterCalculator(computation_str, output, 'GTiff', lyr1.extent(), lyr1.width() ,lyr1.height(),entries)
+        calc.processCalculation()
+        FILLED_layer_name = layer.name()
+        FILLED_layer_name = FILLED_layer_name.removesuffix('REV_FILL')+'FILLED_DEM.tif'
+        FILLED_layer = QgsRasterLayer(output,FILLED_layer_name)
+        if FILLED_layer.isValid() == False:
+            raise Exception("FILLED_layer is invalid")
+        #Only add to canvas if layer doesn't already exist
+        if len(QgsProject.instance().mapLayersByName(FILLED_layer_name)) == 0:
+            QgsProject.instance().addMapLayer(FILLED_layer, False)
+            FILLED_DEM_group.addLayer(FILLED_layer)
+        else:
+            print("Tried to add layer " + FILLED_layer_name + ", however layer already in canvas. Hence layer not added")
+    
     #Subtract rasters from no ice raster
     no_ice_layer = QgsRasterLayer(No_ice_FILLED_raster_path)
     no_ice_ras = qgis.analysis.QgsRasterCalculatorEntry()
@@ -183,9 +328,9 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     for layer in FILLED_DEM_group.findLayers():
         entries = []
         entries.append(no_ice_ras)
-        lyr1 = QgsRasterLayer(str(FILLED_DEM_folder_path)+str(layer.name())+'.tif')
+        lyr1 = QgsRasterLayer(str(FILLED_DEM_folder_path)+str(layer.name()))
         output = str(DIFFERENCE_DEM_folder_path)+str(layer.name())
-        output = output.removesuffix('FILLED_DEM')+'DIFFERENCE_DEM.tif'
+        output = output.removesuffix('FILLED_DEM.tif')+'DIFFERENCE_DEM.tif'
         ras[(str(layer.name())+'_ras')] = qgis.analysis.QgsRasterCalculatorEntry()
         ras[(str(layer.name())+'_ras')].ref = str(layer.name())+'@1'
         ras[(str(layer.name())+'_ras')].raster = lyr1
@@ -195,7 +340,7 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
         calc = qgis.analysis.QgsRasterCalculator(computation_str, output, 'GTiff', lyr1.extent(), lyr1.width() ,lyr1.height(),entries)
         calc.processCalculation()
         DIFFERENCE_layer_name = layer.name()
-        DIFFERENCE_layer_name = DIFFERENCE_layer_name.removesuffix('FILLED_DEM')+'DIFFERENCE_DEM'
+        DIFFERENCE_layer_name = DIFFERENCE_layer_name.removesuffix('FILLED_DEM.tif')+'DIFFERENCE_DEM.tif'
         DIFFERENCE_layer = QgsRasterLayer(output,DIFFERENCE_layer_name)
         #Only add to canvas if layer doesn't already exist
         if len(QgsProject.instance().mapLayersByName(DIFFERENCE_layer_name)) == 0:
@@ -207,7 +352,7 @@ def ice_thickness_estimator(Root_folder_path, No_ice_raster_path, river_polygon_
     
     #Calculate raster statistics
     for layer in DIFFERENCE_DEM_group.findLayers():
-        current_DEM = DIFFERENCE_DEM_folder_path+layer.name()+'.tif'
+        current_DEM = DIFFERENCE_DEM_folder_path+layer.name()
         current_OUTPUT = STATS_folder_path + layer.name()
         current_OUTPUT = current_OUTPUT.removesuffix('DIFFERENCE_DEM')+"STATS.shp"
         column_prefix = '_'
